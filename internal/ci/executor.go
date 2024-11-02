@@ -1,67 +1,57 @@
 package ci
 
 import (
-	"os"
-
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
+	"context"
+	"strings"
 )
 
+type Executor struct {
+	ws Workspace
+}
+
 type Workspace interface {
-    Branch() string
-    Commit() string
-    Dir() string
-    Env() []string
+	Branch() string
+	Commit() string
+	Dir() string
+	Env() []string
+	LoadPipeline() (*Pipeline, error)
+	ExecuteCommand(ctx context.Context, cmd string, args []string) ([]byte, error)
 }
 
-type workspaceImpl struct {
-    branch string
-    commit string
-    dir string
-    env []string
-}
-
-func (ws *workspaceImpl) Branch() string {
-    return ws.branch
-}
-
-func (ws *workspaceImpl) Commit() string {
-    return ws.commit
-}
-
-func (ws *workspaceImpl) Dir() string {
-    return ws.dir
-} 
-
-func (ws *workspaceImpl) Env() []string {
-    return ws.env
-} 
-
-func NewWorkspaceFromGit(root string, url string, branch string) (*workspaceImpl, error) {
-	dir, err := os.MkdirTemp(root, "workspace")
-	if err != nil {
-		return nil, err
+func NewExecutor(ws Workspace) *Executor {
+	return &Executor{
+		ws: ws,
 	}
+}
 
-	repo, err := git.PlainClone(dir, false, &git.CloneOptions{
-		URL:               url,
-		ReferenceName:     plumbing.NewBranchReferenceName(branch),
-		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
-		Depth:             1,
-	})
+func (e *Executor) RunDefault(ctx context.Context) (string, error) {
+	pipeline, err := e.ws.LoadPipeline()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
+	return e.Run(ctx, pipeline)
+}
 
-	ref, err := repo.Head()
-	if err != nil {
-		return nil, err
+func (e *Executor) Run(ctx context.Context, pipeline *Pipeline) (string, error) {
+	output := strings.Builder{}
+	output.WriteString("Executing pipeline: ")
+	output.WriteString(pipeline.Name)
+	output.WriteRune('\n')
+	for _, step := range pipeline.Steps {
+		output.WriteString("Step: ")
+		output.WriteString(step.Name)
+		output.WriteRune('\n')
+		for _, cmd := range step.Commands {
+			withArgs := strings.Fields(cmd)
+			cmd = withArgs[:1][0]
+			args := withArgs[1:]
+			out, err := e.ws.ExecuteCommand(ctx, cmd, args)
+			output.Write(out)
+			output.WriteRune('\n')
+			if err != nil {
+				return output.String(), err
+			}
+		}
 	}
-
-	return &workspaceImpl{
-		dir:    dir,
-		branch: branch,
-		commit: ref.Hash().String(),
-		env:    []string{},
-	}, nil
+	return output.String(), nil
 }
