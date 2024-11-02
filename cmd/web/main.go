@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/flow-ci/flow-ci/internal/app/web/handlers"
 	"github.com/gofiber/fiber/v2"
-	"github.com/patrickrealdeal/flow-ci/internal/app/web/handlers"
 )
 
 func main() {

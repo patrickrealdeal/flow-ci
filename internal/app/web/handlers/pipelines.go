@@ -3,8 +3,8 @@ package handlers
 import (
 	"fmt"
 
+	"github.com/flow-ci/flow-ci/internal/ci"
 	"github.com/gofiber/fiber/v2"
-	"github.com/patrickrealdeal/flow-ci/internal/ci"
 )
 
 func SetupPipelines(app *fiber.App) {
@@ -25,7 +25,7 @@ func postCheckItWorks(c *fiber.Ctx) error {
     }
 
     var ws ci.Workspace
-    ws, err := ci.NewWorkspaceFromGit("./tmp", body.Url, "master")
+    ws, err := ci.NewWorkspaceFromGit("", body.Url, "master")
     if err != nil {
         return err
     }

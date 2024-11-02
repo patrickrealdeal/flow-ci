@@ -1,4 +1,4 @@
-module github.com/patrickrealdeal/flow-ci
+module github.com/flow-ci/flow-ci
 
 go 1.23.2
 

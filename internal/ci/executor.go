@@ -43,8 +43,6 @@ func NewWorkspaceFromGit(root string, url string, branch string) (*workspaceImpl
 		return nil, err
 	}
 
-
-
 	repo, err := git.PlainClone(dir, false, &git.CloneOptions{
 		URL:               url,
 		ReferenceName:     plumbing.NewBranchReferenceName(branch),
