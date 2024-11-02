@@ -3,8 +3,8 @@ package handlers
 import (
 	"fmt"
 
-	"github.com/flow-ci/flow-ci/internal/ci"
 	"github.com/gofiber/fiber/v2"
+	"github.com/patrickrealdeal/flow-ci/internal/ci"
 )
 
 func SetupPipelines(app *fiber.App) {
